@@ -3,6 +3,9 @@ import argparse
 import os
 import sys
 
+from botocore.exceptions import BotoCoreError, ClientError
+from storage import PhotoStorage
+
 
 REQUIRED_ENV_VARS = (
     "BUCKET",
@@ -66,11 +69,30 @@ def main():
                 raise ValueError("Ошибка в аргументах")
 
         # Реализацию команд добавим позже
+        if args.command == "list":
+            storage = PhotoStorage()
+
+            if args.album is None:
+                items = storage.list_albums()
+            else:
+                items = storage.list_photos(args.album)
+
+            for item in items:
+                print(item)
+
+            return 0
+
+        # Остальные команды реализуем позднее.
         raise RuntimeError(
             f"Команда {args.command} пока не реализована"
         )
 
-    except (ValueError, RuntimeError) as error:
+    except (
+        ValueError,
+        RuntimeError,
+        ClientError,
+        BotoCoreError,
+    ) as error:
         print(error, file=sys.stderr)
         return 1
 
