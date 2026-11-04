@@ -107,6 +107,24 @@ def main():
             print(f"Скачано фотографий: {count}")
 
             return 0
+        
+        if args.command == "delete":
+            storage = PhotoStorage()
+
+            if args.photo is not None:
+                storage.delete_photo(
+                    album=args.album,
+                    filename=args.photo,
+                )
+                print(f"Удалена фотография: {args.photo}")
+
+            else:
+                storage.delete_album(
+                    album=args.album,
+                )
+                print(f"Удалён альбом: {args.album}")
+
+            return 0
 
         # Остальные команды реализуем позднее.
         raise RuntimeError(

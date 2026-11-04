@@ -195,3 +195,37 @@ class PhotoStorage:
             )
 
         return len(photos)
+    
+    def delete_photo(self, album: str, filename: str):
+        photos = self.list_photos(album)
+
+        if filename not in photos:
+            raise ValueError(
+                f"В альбоме {album} нет фотографии {filename}"
+            )
+
+        self.client.delete_object(
+            Bucket=self.bucket,
+            Key=photo_key(album, filename),
+        )
+
+    def delete_album(self, album: str):
+        if not self.album_exists(album):
+            raise ValueError(
+                f"В фотоархиве нет альбома с именем {album}"
+            )
+
+        keys = list(self.list_keys(album_prefix(album)))
+        marker = album_marker_key(album)
+
+        for key in keys:
+            if key != marker:
+                self.client.delete_object(
+                    Bucket=self.bucket,
+                    Key=key,
+                )
+
+        self.client.delete_object(
+            Bucket=self.bucket,
+            Key=marker,
+        )
