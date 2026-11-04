@@ -5,6 +5,7 @@ import sys
 
 from botocore.exceptions import BotoCoreError, ClientError
 from storage import PhotoStorage
+from boto3.exceptions import S3UploadFailedError
 
 
 REQUIRED_ENV_VARS = (
@@ -81,6 +82,20 @@ def main():
                 print(item)
 
             return 0
+        
+        if args.command == "upload":
+            storage = PhotoStorage()
+
+            count = storage.upload_photos(
+                album=args.album,
+                directory=args.path,
+            )
+
+            print(
+                f"Загружено фотографий: {count}"
+            )
+
+            return 0
 
         # Остальные команды реализуем позднее.
         raise RuntimeError(
@@ -90,8 +105,10 @@ def main():
     except (
         ValueError,
         RuntimeError,
+        OSError,
         ClientError,
         BotoCoreError,
+        S3UploadFailedError,
     ) as error:
         print(error, file=sys.stderr)
         return 1

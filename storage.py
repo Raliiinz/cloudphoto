@@ -3,6 +3,7 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError
+from pathlib import Path
 
 
 ENDPOINT_URL = "https://storage.yandexcloud.net"
@@ -130,3 +131,44 @@ class PhotoStorage:
                 continue
 
         return utf8_sort(photos)
+
+    
+    def upload_photos(self, album: str, directory: str):
+        path = Path(directory)
+
+        # Проверяем папку
+        if not path.is_dir():
+            raise ValueError(
+                f"Каталог не существует или недоступен: {directory}"
+            )
+
+        photos = [
+            file
+            for file in path.iterdir()
+            if file.is_file()
+            and file.suffix.lower() in (".jpg", ".jpeg")
+        ]
+
+        if not photos:
+            raise ValueError("В каталоге нет фотографий")
+
+        photos.sort(key=lambda file: file.name.encode("utf-8"))
+
+        if not self.album_exists(album):
+            self.client.put_object(
+                Bucket=self.bucket,
+                Key=album_marker_key(album),
+                Body=b"",
+            )
+
+        for file in photos:
+            key = photo_key(album, file.name)
+
+            self.client.upload_file(
+                Filename=str(file),
+                Bucket=self.bucket,
+                Key=key,
+                ExtraArgs={"ContentType": "image/jpeg"},
+            )
+
+        return len(photos)
