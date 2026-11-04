@@ -172,3 +172,26 @@ class PhotoStorage:
             )
 
         return len(photos)
+
+    def download_photos(self, album: str, directory: str):
+        path = Path(directory)
+
+        if not path.is_dir():
+            raise ValueError(
+                f"Каталог не существует или недоступен: {directory}"
+            )
+
+        photos = self.list_photos(album)
+
+        for filename in photos:
+            key = photo_key(album, filename)
+
+            destination = path / filename
+
+            self.client.download_file(
+                Bucket=self.bucket,
+                Key=key,
+                Filename=str(destination),
+            )
+
+        return len(photos)

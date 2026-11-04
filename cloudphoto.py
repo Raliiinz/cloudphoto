@@ -69,7 +69,6 @@ def main():
             ):
                 raise ValueError("Ошибка в аргументах")
 
-        # Реализацию команд добавим позже
         if args.command == "list":
             storage = PhotoStorage()
 
@@ -94,6 +93,18 @@ def main():
             print(
                 f"Загружено фотографий: {count}"
             )
+
+            return 0
+
+        if args.command == "download":
+            storage = PhotoStorage()
+
+            count = storage.download_photos(
+                album=args.album,
+                directory=args.path,
+            )
+
+            print(f"Скачано фотографий: {count}")
 
             return 0
 
