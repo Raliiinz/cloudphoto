@@ -8,3 +8,15 @@ variable "bucket_name" {
   description = "Object Storage bucket name"
   type        = string
 }
+
+variable "domain" {
+  type = string
+}
+
+variable "cert_id" {
+  type = string
+}
+
+variable "dns_zone_id" {
+  type = string
+}

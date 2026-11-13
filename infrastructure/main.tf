@@ -11,9 +11,19 @@ provider "yandex" {
   folder_id = var.folder_id
 }
 
+
 resource "yandex_storage_bucket" "photos" {
   bucket    = var.bucket_name
   folder_id = var.folder_id
+
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
+
+  https {
+    certificate_id = var.cert_id
+  }
 }
 
 # Service account for the cloudphoto application
@@ -43,3 +53,13 @@ resource "yandex_iam_service_account_static_access_key" "cloudphoto" {
   ]
 }
 
+resource "yandex_dns_recordset" "photos" {
+  zone_id = var.dns_zone_id
+  name    = "photos.${var.domain}."
+  type    = "CNAME"
+  ttl     = 300
+
+  data = [
+    "${var.bucket_name}.website.yandexcloud.net."
+  ]
+}
