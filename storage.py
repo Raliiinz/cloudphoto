@@ -4,6 +4,7 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 from pathlib import Path
+import re
 
 
 ENDPOINT_URL = "https://storage.yandexcloud.net"
@@ -229,3 +230,48 @@ class PhotoStorage:
             Bucket=self.bucket,
             Key=marker,
         )
+    
+    def upload_html(self, key: str, html: str):
+        self.client.put_object(
+            Bucket=self.bucket,
+            Key=key,
+            Body=html.encode("utf-8"),
+            ContentType="text/html; charset=utf-8",
+        )
+
+    def configure_website(self):
+        self.client.put_bucket_website(
+            Bucket=self.bucket,
+            WebsiteConfiguration={
+                "IndexDocument": {
+                    "Suffix": "index.html"
+                },
+                "ErrorDocument": {
+                    "Key": "error.html"
+                },
+            },
+        )
+
+        self.client.put_bucket_acl(
+            Bucket=self.bucket,
+            ACL="public-read",
+        )
+
+
+    def delete_obsolete_album_pages(self, album_count: int):
+        for key in self.list_keys("album"):
+            match = re.fullmatch(
+                r"album([1-9][0-9]*)\.html",
+                key,
+            )
+
+            if match is None:
+                continue
+
+            page_number = int(match.group(1))
+
+            if page_number > album_count:
+                self.client.delete_object(
+                    Bucket=self.bucket,
+                    Key=key,
+                )

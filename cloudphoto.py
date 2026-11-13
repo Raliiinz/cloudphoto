@@ -7,6 +7,8 @@ from botocore.exceptions import BotoCoreError, ClientError
 from storage import PhotoStorage
 from boto3.exceptions import S3UploadFailedError
 
+from site_generator import render_index, render_album, render_error
+
 
 REQUIRED_ENV_VARS = (
     "BUCKET",
@@ -123,6 +125,40 @@ def main():
                     album=args.album,
                 )
                 print(f"Удалён альбом: {args.album}")
+
+            return 0
+
+        if args.command == "mksite":
+            storage = PhotoStorage()
+
+            albums = storage.list_albums()
+
+            for number, album in enumerate(albums, start=1):
+                photos = storage.list_photos(album)
+
+                html = render_album(album, photos)
+
+                storage.upload_html(
+                    key=f"album{number}.html",
+                    html=html,
+                )
+
+            storage.upload_html(
+                key="index.html",
+                html=render_index(albums),
+            )
+
+            storage.upload_html(
+                key="error.html",
+                html=render_error(),
+            )
+
+            storage.delete_obsolete_album_pages(len(albums))
+            storage.configure_website()
+
+            print(
+                f"Сайт опубликован. Альбомов: {len(albums)}"
+            )
 
             return 0
 
