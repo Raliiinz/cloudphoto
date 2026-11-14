@@ -5,7 +5,7 @@ import boto3
 from botocore.exceptions import ClientError
 from pathlib import Path
 import re
-
+import tempfile
 
 ENDPOINT_URL = "https://storage.yandexcloud.net"
 REGION = "ru-central1"
@@ -137,7 +137,6 @@ class PhotoStorage:
     def upload_photos(self, album: str, directory: str):
         path = Path(directory)
 
-        # Проверяем папку
         if not path.is_dir():
             raise ValueError(
                 f"Каталог не существует или недоступен: {directory}"
@@ -147,7 +146,7 @@ class PhotoStorage:
             file
             for file in path.iterdir()
             if file.is_file()
-            and file.suffix.lower() in (".jpg", ".jpeg")
+            and file.name.lower().endswith((".jpg", ".jpeg"))
         ]
 
         if not photos:
@@ -174,6 +173,7 @@ class PhotoStorage:
 
         return len(photos)
 
+    
     def download_photos(self, album: str, directory: str):
         path = Path(directory)
 
@@ -182,11 +182,18 @@ class PhotoStorage:
                 f"Каталог не существует или недоступен: {directory}"
             )
 
+        try:
+            with tempfile.TemporaryFile(dir=path):
+                pass
+        except OSError as error:
+            raise ValueError(
+                f"Каталог недоступен для записи: {directory}"
+            ) from error
+
         photos = self.list_photos(album)
 
         for filename in photos:
             key = photo_key(album, filename)
-
             destination = path / filename
 
             self.client.download_file(

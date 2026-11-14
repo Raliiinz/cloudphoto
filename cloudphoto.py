@@ -63,13 +63,15 @@ def main():
 
         args = create_parser().parse_args()
 
-        for field in ("album", "photo"):
+        for field in ("album", "photo", "path"):
             value = getattr(args, field, None)
 
-            if value is not None and (
-                not value or "/" in value
-            ):
-                raise ValueError("Ошибка в аргументах")
+            if value is not None:
+                if not value:
+                    raise ValueError("Ошибка в аргументах")
+
+                if field in ("album", "photo") and "/" in value:
+                    raise ValueError("Ошибка в аргументах")
 
         if args.command == "list":
             storage = PhotoStorage()
@@ -162,7 +164,6 @@ def main():
 
             return 0
 
-        # Остальные команды реализуем позднее.
         raise RuntimeError(
             f"Команда {args.command} пока не реализована"
         )
