@@ -53,9 +53,14 @@ resource "yandex_iam_service_account_static_access_key" "cloudphoto" {
   ]
 }
 
+data "yandex_dns_zone" "existing" {
+  folder_id = var.folder_id
+  name      = split(".", var.domain)[0]
+}
+
 resource "yandex_dns_recordset" "photos" {
-  zone_id = var.dns_zone_id
-  name    = "photos.${var.domain}."
+  zone_id = data.yandex_dns_zone.existing.id
+  name    = "${trimsuffix(var.dns_zone_id, ".")}."
   type    = "CNAME"
   ttl     = 300
 

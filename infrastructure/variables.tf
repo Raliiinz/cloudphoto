@@ -18,5 +18,6 @@ variable "cert_id" {
 }
 
 variable "dns_zone_id" {
-  type = string
+  description = "Full domain name of the website, e.g. photos.vvot02.itiscl.ru"
+  type        = string
 }
